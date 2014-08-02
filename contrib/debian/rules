@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+# -*- mode: makefile; coding: utf-8 -*-
+
+#DEB_MAKE_CHECK_TARGET = test_waccoingold
+#build/waccoingoldd::
+#	$(if $(filter nocheck,$(DEB_BUILD_OPTIONS)),,src/test_waccoingold)
+
+DEB_INSTALL_EXAMPLES_waccoingoldd += debian/examples/*
+DEB_INSTALL_MANPAGES_waccoingoldd += debian/manpages/*
+
+%:
+	dh --with bash-completion $@
+
+override_dh_auto_build:
+	cd src; $(MAKE) -f makefile.unix waccoingoldd
+	$(MAKE)
+
+override_dh_auto_clean:
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f waccoingold-qt; fi
+	cd src; $(MAKE) -f makefile.unix clean
+
+override_dh_auto_configure:
+	qmake waccoingold-qt.pro USE_QRCODE=1
+
+override_dh_auto_test:
+	cd src; $(MAKE) -f makefile.unix test_waccoingold
+	src/test_waccoingold
+
+# Ensure wrapper is set executable
+binary-post-install/waccoingoldd:
+	chmod +x $(cdbs_curdestdir)usr/bin/waccoingoldd
+binary-post-install/waccoingold-qt:
+	chmod +x $(cdbs_curdestdir)usr/bin/waccoingold-qt

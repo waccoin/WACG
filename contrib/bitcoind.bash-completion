@@ -1,0 +1,115 @@
+# bash programmable completion for waccoingoldd(1)
+# Copyright (c) 2012 Christian von Roques <roques@mti.ag>
+# Distributed under the MIT/X11 software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+have waccoingoldd && {
+
+# call $waccoingoldd for RPC
+_waccoingold_rpc() {
+    # determine already specified args necessary for RPC
+    local rpcargs=()
+    for i in ${COMP_LINE}; do
+        case "$i" in
+            -conf=*|-proxy*|-rpc*)
+                rpcargs=( "${rpcargs[@]}" "$i" )
+                ;;
+        esac
+    done
+    $waccoingoldd "${rpcargs[@]}" "$@"
+}
+
+# Add waccoingold accounts to COMPREPLY
+_waccoingold_accounts() {
+    local accounts
+    accounts=$(_waccoingold_rpc listaccounts | awk '/".*"/ { a=$1; gsub(/"/, "", a); print a}')
+    COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
+}
+
+_waccoingoldd() {
+    local cur prev words=() cword
+    local waccoingoldd
+
+    # save and use original argument to invoke waccoingoldd
+    # waccoingoldd might not be in $PATH
+    waccoingoldd="$1"
+
+    COMPREPLY=()
+    _get_comp_words_by_ref -n = cur prev words cword
+
+    if ((cword > 2)); then
+        case ${words[cword-2]} in
+            listreceivedbyaccount|listreceivedbyaddress)
+                COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
+                return 0
+                ;;
+            move|setaccount)
+                _waccoingold_accounts
+                return 0
+                ;;
+        esac
+    fi
+
+    case "$prev" in
+        backupwallet)
+            _filedir
+            return 0
+            ;;
+        setgenerate)
+            COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
+            return 0
+            ;;
+        getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
+            _waccoingold_accounts
+            return 0
+            ;;
+    esac
+
+    case "$cur" in
+        -conf=*|-pid=*|-rpcsslcertificatechainfile=*|-rpcsslprivatekeyfile=*)
+            cur="${cur#*=}"
+            _filedir
+            return 0
+            ;;
+        -datadir=*)
+            cur="${cur#*=}"
+            _filedir -d
+            return 0
+            ;;
+        -*=*)	# prevent nonsense completions
+            return 0
+            ;;
+        *)
+            local helpopts commands
+
+            # only parse --help if senseful
+            if [[ -z "$cur" || "$cur" =~ ^- ]]; then
+                helpopts=$($waccoingoldd --help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+            fi
+
+            # only parse help if senseful
+            if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
+                commands=$(_waccoingold_rpc help 2>/dev/null | awk '{ print $1; }')
+            fi
+
+            COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
+
+            # Prevent space if an argument is desired
+            if [[ $COMPREPLY == *= ]]; then
+                compopt -o nospace
+            fi
+            return 0
+            ;;
+    esac
+}
+
+complete -F _waccoingoldd waccoingoldd
+}
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh

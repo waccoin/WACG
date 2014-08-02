@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=WaccoinGold
+Comment=WaccoinGold P2P Cryptocurrency
+Comment[fr]=WaccoinGold, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=WaccoinGold, eşten eşe kriptografik sanal para birimi
+Exec=/usr/bin/waccoingold-qt %u
+Terminal=false
+Type=Application
+Icon=/usr/share/pixmaps/waccoingold128.png
+MimeType=x-scheme-handler/waccoingold;
+Categories=Office;

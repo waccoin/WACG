@@ -1,0 +1,6 @@
+waccoingold-qt usr/bin
+share/pixmaps/waccoingold32.xpm usr/share/pixmaps
+share/pixmaps/waccoingold16.xpm usr/share/pixmaps
+share/pixmaps/waccoingold128.png usr/share/pixmaps
+debian/waccoingold-qt.desktop usr/share/applications
+debian/waccoingold-qt.protocol usr/share/kde4/services/
